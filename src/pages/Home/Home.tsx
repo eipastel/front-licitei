@@ -81,11 +81,12 @@ const Home: React.FC = () => {
                 <IoDocumentOutline
                   size={26}
                   className="text-gray-400"
+                  title={selectedFile.name}
                 />
               </div>
 
               <div className="flex flex-col items-left justify-between font-normal my-1">
-                <p className="text-gray-300 max-w-56 truncate">{selectedFile.name}</p>
+                <p title={selectedFile.name} className="text-gray-300 max-w-56 truncate">{selectedFile.name}</p>
                 <p className="text-gray-400 text-sm">{getFileSizeString({size: selectedFile.size})}</p>
               </div>
           </div>
