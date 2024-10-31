@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { FiFilePlus, FiX } from 'react-icons/fi';
 import { IoDocumentOutline } from "react-icons/io5";
 import { FaPen } from "react-icons/fa";
+import { useAuth } from '../../hooks/useAuth';
 
 const Home: React.FC = () => {
+  const { logout } = useAuth();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -47,7 +50,8 @@ const Home: React.FC = () => {
           <h1 className="text-2xl font-light">Analisar Arquivo</h1>
           <FiX 
             size={28}
-            className="pointer-events-none cursor-pointer text-gray-400 hover:text-white hover:scale-110 transition duration-300 ease-in-out"
+            className="text-gray-400 cursor-pointer hover:text-white hover:scale-110 transition duration-300 ease-in-out"
+            onClick={logout}
           />
         </header>
 
@@ -76,7 +80,7 @@ const Home: React.FC = () => {
         </section>
 
         {selectedFile ? (<section className="w-full h-[100px] border p-5 border-gray-600 bg-[#363636] rounded-2xl shadow-2xl flex flex-row items-center justify-between">
-          <div className="w-full h-full flex flex-row gap-4">
+          <div className="w-full h-full flex flex-row gap-4 mb-1">
               <div className="w-16 h-16 flex flex-col items-center justify-center bg-[#202427] rounded-lg">
                 <IoDocumentOutline
                   size={26}
@@ -91,7 +95,7 @@ const Home: React.FC = () => {
               </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-1">
             <FaPen
               size={20}
               className="cursor-pointer text-gray-400 hover:text-gray-300 hover:scale-110 transition duration-300 ease-in-out"
@@ -110,7 +114,7 @@ const Home: React.FC = () => {
 
         <section className="w-full h-[100px] flex justify-between">
           <button
-            onClick={() => {console.log("Unavailable")}}
+            onClick={logout}
             className="w-64 h-12 bg-[#363636] hover:bg-gray-600 rounded-full flex justify-center items-center text-gray-200 text-xl font-normal transition duration-300 ease-in-out"
           >
             Cancelar

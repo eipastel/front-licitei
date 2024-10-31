@@ -1,14 +1,15 @@
+import { api } from "../config/api";
+import { endpoints } from "../config/endpoints";
+
+export interface ApiResponse {
+    data: string
+}
+
 export const authService = {
-    login: async (username: string, password: string): Promise<string | null> => {
-        return new Promise((resolve) => {
-        setTimeout(() => {
-            if (username === 'admin' && password === 'password') {
-                resolve('fake-jwt-token');
-            } else {
-                resolve(null);
-            }
-        }, 1000);
-        });
+    login: async (email: string, password: string): Promise<ApiResponse> => {
+        return api.post(endpoints.LOGIN, { 
+            email,
+            senha: password
+        })
     },
 };
-  

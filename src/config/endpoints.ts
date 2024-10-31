@@ -1,5 +1,5 @@
 const primary = {
-    auth: "/auth",
+    auth: "/auth_",
 }
 
 export const endpoints = {

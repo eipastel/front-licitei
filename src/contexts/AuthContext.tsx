@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
-import { authService } from '../services/authService';
+import { ApiResponse, authService } from '../services/authService';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -22,8 +22,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     const login = async (username: string, password: string): Promise<boolean> => {
-        const token = await authService.login(username, password);
-        if (token) {
+        const response: ApiResponse = await authService.login(username, password);
+        if (response.data) {
+            const token = response.data;
             localStorage.setItem('token', token);
             setIsAuthenticated(true);
             return true;
