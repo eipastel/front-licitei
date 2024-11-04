@@ -3,12 +3,17 @@ import { FiFilePlus, FiX } from 'react-icons/fi';
 import { IoDocumentOutline } from "react-icons/io5";
 import { FaPen } from "react-icons/fa";
 import { useAuth } from '../../hooks/useAuth';
+import { generateAndDownloadCsv, getResult, initProcessFile, startAnalysis, verifyExtraction } from '../../services/documentService';
+import Processing from '../../components/Processing';
 
 const Home: React.FC = () => {
   const { logout } = useAuth();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processMessage, setProcessMessage] = useState('');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -38,13 +43,115 @@ const Home: React.FC = () => {
   };
 
   const handleProcessFile = () => {
-    if (selectedFile) {
-      console.log("Arquivo salvo:", selectedFile.name);
+    if (selectedFile != null && !isProcessing) {
+      setIsProcessing(true);
+      setProcessMessage('Fazendo upload do arquivo...');
+  
+      initProcessFile(selectedFile)
+        .then((response) => {
+          if (response.status === 200) {
+            setProcessMessage('Extraindo requisitos...');
+            const { data } = response.data;
+            verificarExtracaoEAnalise(data.id);
+          } else {
+            alert('Erro ao processar arquivo.');
+            resetProcess();
+          }
+        })
+        .catch((error) => {
+          console.error('Erro ao processar o arquivo:', error);
+          setProcessMessage('Erro ao processar o arquivo.');
+          resetProcess();
+        });
+    } else {
+      alert('Nenhum arquivo selecionado.');
+      resetProcess();
     }
+  };
+  
+  const verificarExtracaoEAnalise = (fileId: number) => {
+    const verificaExtracao = () => {
+      verifyExtraction(fileId)
+        .then((response) => {
+          if (response.status === 200) {
+            const pendente = response.data.data;
+  
+            if (!pendente) {
+              iniciarAnalise(fileId);
+            } else {
+              setTimeout(verificaExtracao, 3000);
+            }
+          } else {
+            resetProcess();
+          }
+        })
+        .catch((error) => {
+          console.error('Erro ao verificar o progresso:', error);
+          setProcessMessage('Erro ao verificar o progresso.');
+          resetProcess();
+        });
+    };
+  
+    verificaExtracao();
+  };
+  
+  const iniciarAnalise = (fileId: number) => {
+    const verificaProgressoAnalise = () => {
+      startAnalysis(fileId)
+        .then((response) => {
+          if (response.status === 200) {
+            const processoAnalise = response.data.data;
+  
+            if (processoAnalise !== null) {
+              const { quantidadeRequisitosAnalisados, quantidadeRequisitos } = processoAnalise;
+              setProcessMessage(`Analisando ${quantidadeRequisitosAnalisados}/${quantidadeRequisitos} requisitos...`);
+  
+              const requisitosRestantes = quantidadeRequisitos - quantidadeRequisitosAnalisados;
+  
+              if (requisitosRestantes > 0) {
+                setTimeout(verificaProgressoAnalise, 3000);
+              } else {
+                getResult(fileId).then((response) => {
+                  if(response.status === 200) {
+                    const { data } = response.data;
+                    if(data) {
+                      generateAndDownloadCsv(data);
+                    } else {
+                      console.warn('Nenhum resultado retornado.');
+                    }
+                  }
+                })
+                
+                resetProcess();
+                alert('Análise concluída.');
+              }
+            } else {
+              console.warn('Nenhum dado de progresso retornado.');
+              resetProcess();
+            }
+          } else {
+            console.error('Erro ao obter o status da análise.');
+            resetProcess();
+          }
+        })
+        .catch((error) => {
+          console.error('Erro ao verificar o progresso da análise:', error);
+          setProcessMessage('Erro ao verificar o progresso da análise.');
+          resetProcess();
+        });
+    };
+  
+    verificaProgressoAnalise();
+  };
+  
+  const resetProcess = () => {
+    setIsProcessing(false);
+    setProcessMessage('');
   };
 
   return (
-    <main className="w-full h-screen flex justify-center items-center">
+    <main className="w-full h-screen relative flex justify-center items-center">
+      {isProcessing && <Processing message={processMessage}/>}
       <div className="w-[600px] h-[600px] flex flex-col items-center justify-between bg-[#202427] p-8 rounded-3xl shadow-2xl gap-6">
         <header className="w-full flex justify-between">
           <h1 className="text-2xl font-light">Analisar Arquivo</h1>
